@@ -162,12 +162,19 @@ st.markdown("<div class='team-section'>", unsafe_allow_html=True)
 st.markdown("<div class='team-title'>🛡️ لا تراجع ولا استسلام 🛡️</div><br>", unsafe_allow_html=True)
 st.markdown("<b>Designed & Engineered By:</b>", unsafe_allow_html=True)
 
-if os.path.exists("صوره التيم.jpeg"):
-    st.image("صوره التيم.jpeg", use_column_width=True)
-elif os.path.exists("team.jpg"):
-    st.image("team.jpg", use_column_width=True)
-elif os.path.exists("team.png"):
-    st.image("team.png", use_column_width=True)
+image_loaded = False
+for img_name in ["صوره التيم.jpeg", "صورة التيم.jpeg", "team.jpg", "team.png", "صوره التيم.jpg"]:
+    if os.path.exists(img_name):
+        try:
+            with open(img_name, "rb") as f:
+                st.image(f.read(), use_column_width=True)
+            image_loaded = True
+            break
+        except:
+            pass
+
+if not image_loaded:
+    st.warning("⚠️ يرجى التأكد من تغيير اسم الصورة إلى team.jpg ليتم عرضها هنا.")
 
 col_t1, col_t2 = st.columns(2)
 with col_t1:
