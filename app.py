@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 # --- Page Config ---
 st.set_page_config(
@@ -25,19 +28,58 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Load Model Artifacts ---
+# --- Load Model Artifacts or Train on the Fly ---
 @st.cache_resource
-def load_artifacts():
+def load_or_train_model():
+    # If pkl files exist, load them (ultra fast)
     try:
         model = joblib.load('log_model.pkl')
         scaler = joblib.load('scaler.pkl')
         expected_cols = joblib.load('expected_columns.pkl')
         return model, scaler, expected_cols
-    except Exception as e:
-        st.error("Error loading model! Please run 'python train_model.py' first.")
-        return None, None, None
+    except Exception:
+        # If not on PC/GitHub, train it live (takes ~2 seconds on Streamlit Cloud)
+        try:
+            df = pd.read_csv('bank-additional-full (1).csv', sep=';')
+            if 'duration' in df.columns:
+                df = df.drop('duration', axis=1)
+            df['target'] = df['y'].map({'yes': 1, 'no': 0})
+            df = df.drop('y', axis=1)
+            
+            for col in ['job', 'marital', 'housing', 'loan']:
+                mode_val = df[df[col] != 'unknown'][col].mode()[0]
+                df[col] = df[col].replace('unknown', mode_val)
 
-model, scaler, expected_cols = load_artifacts()
+            df['contacted_before'] = (df['pdays'] != 999).astype(int)
+            df.loc[df['pdays'] == 999, 'pdays'] = 0
+            
+            edu_map = {'illiterate':0, 'unknown':1, 'basic.4y':2, 'basic.6y':3, 'basic.9y':4, 'high.school':5, 'professional.course':6, 'university.degree':7}
+            df['education_level'] = df['education'].map(edu_map)
+            df = df.drop('education', axis=1)
+            
+            df.loc[df['campaign'] > 15, 'campaign'] = 15
+            df = df.drop(['emp.var.rate', 'nr.employed'], axis=1, errors='ignore')
+            
+            df_ml = df.drop(columns=['age_group'], errors='ignore')
+            categorical_cols = df_ml.select_dtypes(include=['object']).columns
+            df_encoded = pd.get_dummies(df_ml, columns=categorical_cols, drop_first=True)
+            
+            X = df_encoded.drop('target', axis=1)
+            y = df_encoded['target']
+            
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(X)
+            
+            model = LogisticRegression(class_weight='balanced', random_state=42, max_iter=2000)
+            model.fit(X_scaled, y)
+            
+            return model, scaler, list(X.columns)
+        except Exception as deep_e:
+            st.error(f"Failed to find model and failed to read the CSV file! Error: {deep_e}")
+            return None, None, None
+
+with st.spinner("Initializing AI Model..."):
+    model, scaler, expected_cols = load_or_train_model()
 
 # --- Main App ---
 st.markdown("<div class='main-header'>🏢 NovaTrust Bank</div>", unsafe_allow_html=True)
@@ -75,7 +117,6 @@ if model:
         cons_conf_idx = st.number_input("Consumer Confidence Index", value=-36.4)
 
     # --- Processing Vector ---
-    # Prepare dataframe row exactly as pandas get_dummies format expects
     input_data = {
         'age': age, 'job': job, 'marital': marital, 'education': education,
         'default': default, 'housing': housing, 'loan': loan, 'contact': contact,
@@ -86,8 +127,6 @@ if model:
     
     df_in = pd.DataFrame([input_data])
     
-    # 1. Unknown Imputation logic (simulate what we did in training using mode roughly or leave as is if user selected unknown)
-    # 2. Pdays trap & Education Map
     df_in['contacted_before'] = (df_in['pdays'] != 999).astype(int)
     df_in.loc[df_in['pdays'] == 999, 'pdays'] = 0
     
@@ -95,14 +134,10 @@ if model:
     df_in['education_level'] = df_in['education'].map(edu_map)
     df_in = df_in.drop('education', axis=1)
 
-    # 3. Categorical encoding
     cat_cols = df_in.select_dtypes(include=['object']).columns
     df_encoded = pd.get_dummies(df_in, columns=cat_cols)
     
-    # 4. Reindex to match training columns
     df_final = df_encoded.reindex(columns=expected_cols, fill_value=0)
-    
-    # 5. Scale
     X_scaled = scaler.transform(df_final)
 
     # --- Prediction Panel ---
@@ -112,10 +147,6 @@ if model:
         st.write("### AI Customer Assessment:")
         if st.button("🔮 P R E D I C T", use_container_width=True):
             prob = model.predict_proba(X_scaled)[0][1]
-            
-            # The chosen threshold from our Notebook ROI calculation was around top 70% (skipping worst 30%)
-            # But let's use a strict 0.5 default decision boundary for standard display, 
-            # or a warning if prob < 0.2
             
             st.write("---")
             if prob >= 0.5:
@@ -131,7 +162,6 @@ st.markdown("<div class='team-section'>", unsafe_allow_html=True)
 st.markdown("<div class='team-title'>🛡️ لا تراجع ولا استسلام 🛡️</div><br>", unsafe_allow_html=True)
 st.markdown("<b>Designed & Engineered By:</b>", unsafe_allow_html=True)
 
-# Try rendering team image if provided
 if os.path.exists("team.jpg"):
     st.image("team.jpg", use_column_width=True)
 elif os.path.exists("team.png"):
