@@ -163,7 +163,7 @@ st.markdown("<div class='team-title'>🛡️ لا تراجع ولا استسلا
 st.markdown("<b>Designed & Engineered By:</b>", unsafe_allow_html=True)
 
 image_loaded = False
-for img_name in ["صوره التيم.jpeg", "صورة التيم.jpeg", "team.jpg", "team.png", "صوره التيم.jpg"]:
+for img_name in ["teamna.jpeg", "صوره التيم.jpeg", "صورة التيم.jpeg", "team.jpg", "team.png", "صوره التيم.jpg"]:
     if os.path.exists(img_name):
         try:
             with open(img_name, "rb") as f:
@@ -183,5 +183,10 @@ with col_t1:
 with col_t2:
     st.markdown("<p class='team-member'>👩‍💻 Mariam Tamer<br><small>224015@eru.edu.eg</small></p>", unsafe_allow_html=True)
     st.markdown("<p class='team-member'>👩‍💻 Alhosna Ezzat<br><small>224222@eru.edu.eg</small></p>", unsafe_allow_html=True)
+
+st.markdown("<br><hr style='opacity: 0.3;'>", unsafe_allow_html=True)
+st.markdown("<p style='font-size: 20px; color: #4CAF50; font-weight: bold;'>Under the Supervision of:</p>", unsafe_allow_html=True)
+st.markdown("<p class='team-member'>🎓 Dr. Rowaida Ali</p>", unsafe_allow_html=True)
+st.markdown("<p class='team-member'>👩‍🏫 TA. Mariam Abdelhamid</p>", unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
