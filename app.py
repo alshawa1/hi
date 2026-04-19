@@ -163,15 +163,11 @@ st.markdown("<div class='team-title'>🛡️ لا تراجع ولا استسلا
 st.markdown("<b>Designed & Engineered By:</b>", unsafe_allow_html=True)
 
 image_loaded = False
-for img_name in ["teamna.jpeg", "صوره التيم.jpeg", "صورة التيم.jpeg", "team.jpg", "team.png", "صوره التيم.jpg"]:
+for img_name in ["teamna.jpeg", "team.jpg", "team.png"]:
     if os.path.exists(img_name):
-        try:
-            with open(img_name, "rb") as f:
-                st.image(f.read(), use_column_width=True)
-            image_loaded = True
-            break
-        except:
-            pass
+        st.image(img_name, use_column_width=True)
+        image_loaded = True
+        break
 
 if not image_loaded:
     st.warning("⚠️ يرجى التأكد من تغيير اسم الصورة إلى team.jpg ليتم عرضها هنا.")
