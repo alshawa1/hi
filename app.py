@@ -162,7 +162,7 @@ st.markdown("<div class='team-section'>", unsafe_allow_html=True)
 st.markdown("<div class='team-title'>🛡️ لا تراجع ولا استسلام 🛡️</div><br>", unsafe_allow_html=True)
 st.markdown("<b>Designed & Engineered By:</b>", unsafe_allow_html=True)
 
-if os.path.exists("team.jpg"):
+if os.path.exists("C:\Users\dell\Downloads\competition"):
     st.image("team.jpg", use_column_width=True)
 elif os.path.exists("team.png"):
     st.image("team.png", use_column_width=True)
