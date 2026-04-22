@@ -21,6 +21,7 @@ st.markdown("""
 .main-header { font-size: 40px; color: #1E88E5; font-weight: bold; text-align: center; margin-bottom: -10px; }
 .sub-header { font-size: 20px; color: #607D8B; text-align: center; margin-bottom: 30px; }
 .card-success { background-color: rgba(76, 175, 80, 0.1); border-left: 5px solid #4CAF50; padding: 20px; border-radius: 5px; }
+.card-warning { background-color: rgba(255, 193, 7, 0.1); border-left: 5px solid #FFC107; padding: 20px; border-radius: 5px; }
 .card-danger { background-color: rgba(244, 67, 54, 0.1); border-left: 5px solid #F44336; padding: 20px; border-radius: 5px; }
 .team-section { background: rgba(158, 158, 158, 0.1); padding: 30px; border-radius: 15px; margin-top: 50px; text-align: center; }
 .team-title { font-family: 'Courier New', Courier, monospace; font-size: 28px; font-weight: bold; color: #E91E63; }
@@ -144,18 +145,54 @@ if model:
     col1, col2, col3 = st.columns([1,2,1])
     
     with col2:
-        st.write("### AI Customer Assessment:")
+        st.write("### 🤖 نظام تحليل ودعم القرار (AI Support):")
         if st.button("🔮 P R E D I C T", use_container_width=True):
             prob = model.predict_proba(X_scaled)[0][1]
             
-            st.write("---")
-            if prob >= 0.5:
-                st.markdown(f"<div class='card-success'>✅ <b>High Potential!</b><br>Probability of subscribing: <b>{prob*100:.1f}%</b><br>Action: <b>CALL THIS CLIENT</b></div>", unsafe_allow_html=True)
-                st.balloons()
-            elif prob >= 0.2:
-                st.info(f"🤔 **Moderate Potential**<br>Probability: **{prob*100:.1f}%**<br>Action: Worth a try if budget allows.", icon="📈")
+            # --- Prescriptive Logic Integration ---
+            contact_history = df_in['contacted_before'].iloc[0]
+            month_val = df_in['month'].iloc[0]
+            
+            prescriptive_msg = ""
+            card_class = "card-danger"
+            status_icon = "❌"
+            
+            if prob >= 0.85:
+                prescriptive_msg = "أولوية قصوى: العميل متحمس جداً، اتصل به الآن لإتمام العملية!"
+                card_class = "card-success"
+                status_icon = "🔥"
+            elif 0.60 <= prob < 0.85:
+                card_class = "card-success"
+                status_icon = "🤝"
+                if contact_history == 1:
+                    prescriptive_msg = "عميل وفيّ: ذكّره بتجربته الإيجابية السابقة لضمان نجاح المكالمة."
+                elif month_val in ['mar', 'sep', 'oct', 'dec']:
+                    prescriptive_msg = f"توقيت ذهبي: شهر {month_val} من أفضل الأوقات لإقناع هذا العميل."
+                else:
+                    prescriptive_msg = "توصية: العميل مهتم، لكن يفضل الاتصال به في وقت لاحق لزيادة فرص القبول."
+            elif 0.30 <= prob < 0.60:
+                prescriptive_msg = "نصيحة: احتمالية النجاح متوسطة. لا تكرر الاتصال أكثر من مرتين لتجنب الإزعاج."
+                card_class = "card-warning"
+                status_icon = "⚠️"
             else:
-                st.markdown(f"<div class='card-danger'>⛔ <b>Very Low Potential</b><br>Probability of subscribing: <b>{prob*100:.1f}%</b><br>Action: <b>SKIP CALL - SAVE MONEY (€6)</b></div>", unsafe_allow_html=True)
+                prescriptive_msg = "استبعاد: احتمالية الاشتراك ضئيلة جداً. وفّر تكلفة المكالمة (€6) ومجهود الموظف."
+                card_class = "card-danger"
+                status_icon = "⛔"
+            
+            st.write("---")
+            st.markdown(f"""
+            <div class='{card_class}'>
+                <div style='font-size: 24px; font-weight: bold;'>{status_icon} نتيجة التوقع: {prob*100:.1f}%</div>
+                <hr style='margin: 10px 0; border-top: 1px solid rgba(0,0,0,0.1);'>
+                <div style='font-size: 18px; line-height: 1.6;'>
+                    <b>الروشتة الاستراتيجية (Prescriptive):</b><br>
+                    {prescriptive_msg}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if prob >= 0.6:
+                st.balloons()
 
 # --- Team Section ---
 st.markdown("<div class='team-section'>", unsafe_allow_html=True)
