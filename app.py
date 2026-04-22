@@ -178,10 +178,10 @@ def predictive_page():
                 st.write("---")
                 st.markdown(f"""
                 <div class='{card_class}'>
-                    <div style='font-size: 24px; font-weight: bold;'>{status_icon} نتيجة التوقع: {prob*100:.1f}%</div>
+                    <div style='font-size: 22px; font-weight: bold;'>📊 التحليل التوقعي (Predictive Analysis): {prob*100:.1f}%</div>
                     <hr style='margin: 10px 0; border-top: 1px solid rgba(0,0,0,0.1);'>
                     <div style='font-size: 18px; line-height: 1.6;'>
-                        <b>الروشتة الاستراتيجية (Prescriptive):</b><br>
+                        {status_icon} <b>التوجيه الاستراتيجي (Prescriptive Strategy):</b><br>
                         {strategy_label}
                     </div>
                 </div>
@@ -229,7 +229,9 @@ def get_prescriptive_data():
     
     # Sort and take top 500
     top_500 = df_raw.sort_values(by='Probability', ascending=False).head(500)
-    return top_500[['age', 'job', 'marital', 'month', 'Probability', 'Recommended_Action']]
+    return top_500[['age', 'job', 'marital', 'month', 'Probability', 'Recommended_Action']].rename(columns={
+        'age': 'Age', 'job': 'Job', 'marital': 'Marital', 'month': 'Month', 'Recommended_Action': 'Strategic_Action'
+    })
 
 def prescriptive_page():
     st.markdown("<div class='main-header'>🎯 Smart Call List (Prescriptive Strategy)</div>", unsafe_allow_html=True)
